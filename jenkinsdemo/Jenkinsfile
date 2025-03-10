@@ -14,16 +14,16 @@ pipeline {
 
         stage('Build') {
             steps {
-                dir('jenkinsdemo') {   // Navigate into jenkinsdemo directory
-                    bat 'mvn clean package'
+                dir('jenkinsdemo') {   // Change directory to jenkinsdemo
+                    bat './mvnw clean package'  // Use wrapper to ensure Maven runs correctly
                 }
             }
         }
 
         stage('Test') {
             steps {
-                dir('jenkinsdemo') {   // Navigate into jenkinsdemo directory
-                    bat 'mvn test'
+                dir('jenkinsdemo') {
+                    bat './mvnw test'
                 }
             }
         }
