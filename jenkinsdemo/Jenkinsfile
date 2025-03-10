@@ -1,69 +1,33 @@
 pipeline {
-    agent any
+    agent any  // Runs on any available agent
 
     environment {
-        IMAGE_NAME = "pavanprem/myapp:latest"
-        CONTAINER_NAME = "myapp-container"
+        MAVEN_HOME = "/usr/share/maven"  // Set Maven path if required
     }
 
     stages {
-        stage('Check Docker') {
+        stage('Checkout') {
             steps {
-                script {
-                    echo "🔍 Checking Docker Installation & Running Containers"
-                    sh "docker --version"
-                    sh "docker ps"
-                }
+                git branch: 'main', url: 'https://github.com/PavanKalyan96Dev/SpringBootJenkins'
             }
         }
 
-        stage('Checkout Code') {
+        stage('Build') {
             steps {
-                echo "📥 Checking out source code from GitHub"
-                git 'https://github.com/PavanKalyan96Dev/SpringBootJenkins.git'
+                sh 'mvn clean package'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Test') {
             steps {
-                script {
-                    echo "🔨 Building Docker Image: $IMAGE_NAME"
-                    sh "docker build -t $IMAGE_NAME ${env.WORKSPACE}"
-                }
+                sh 'mvn test'
             }
         }
 
-        stage('Run Container') {
+        stage('Deploy') {
             steps {
-                script {
-                    echo "🚀 Running Container: $CONTAINER_NAME"
-                    sh "docker stop $CONTAINER_NAME || true"
-                    sh "docker rm $CONTAINER_NAME || true"
-                    sh "docker run -d --name $CONTAINER_NAME -p 8080:8080 $IMAGE_NAME"
-                }
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    echo "🔑 Logging into Docker Hub"
-                    sh "echo '\$DOCKER_PASSWORD' | docker login -u '\$DOCKER_USERNAME' --password-stdin"
-                    
-                    echo "📤 Pushing Image to Docker Hub: $IMAGE_NAME"
-                    sh "docker push $IMAGE_NAME"
-                }
-            }
-        }
-
-        stage('Clean Up') {
-            steps {
-                script {
-                    echo "🧹 Cleaning Up Unused Docker Resources"
-                    sh "docker stop $CONTAINER_NAME || true"
-                    sh "docker rm $CONTAINER_NAME || true"
-                    sh "docker image prune -f || true"
-                }
+                echo "Deploying application..."
+                // Add deployment commands here
             }
         }
     }
