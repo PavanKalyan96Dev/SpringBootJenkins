@@ -7,8 +7,19 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Check Docker') {
             steps {
+                script {
+                    echo "🔍 Checking Docker Installation & Running Containers"
+                    sh "docker --version"
+                    sh "docker ps"
+                }
+            }
+        }
+
+        stage('Checkout Code') {
+            steps {
+                echo "📥 Checking out source code from GitHub"
                 git 'https://github.com/PavanKalyan96Dev/SpringBootJenkins.git'
             }
         }
@@ -16,7 +27,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "cd ${env.WORKSPACE} && docker build -t $IMAGE_NAME ."
+                    echo "🔨 Building Docker Image: $IMAGE_NAME"
+                    sh "docker build -t $IMAGE_NAME ${env.WORKSPACE}"
                 }
             }
         }
@@ -24,6 +36,7 @@ pipeline {
         stage('Run Container') {
             steps {
                 script {
+                    echo "🚀 Running Container: $CONTAINER_NAME"
                     sh "docker stop $CONTAINER_NAME || true"
                     sh "docker rm $CONTAINER_NAME || true"
                     sh "docker run -d --name $CONTAINER_NAME -p 8080:8080 $IMAGE_NAME"
@@ -33,7 +46,11 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
+                script {
+                    echo "🔑 Logging into Docker Hub"
+                    sh "echo '\$DOCKER_PASSWORD' | docker login -u '\$DOCKER_USERNAME' --password-stdin"
+                    
+                    echo "📤 Pushing Image to Docker Hub: $IMAGE_NAME"
                     sh "docker push $IMAGE_NAME"
                 }
             }
@@ -42,9 +59,10 @@ pipeline {
         stage('Clean Up') {
             steps {
                 script {
+                    echo "🧹 Cleaning Up Unused Docker Resources"
                     sh "docker stop $CONTAINER_NAME || true"
                     sh "docker rm $CONTAINER_NAME || true"
-                    sh "docker image prune -f"
+                    sh "docker image prune -f || true"
                 }
             }
         }
