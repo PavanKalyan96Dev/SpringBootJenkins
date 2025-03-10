@@ -14,13 +14,17 @@ pipeline {
 
         stage('Build') {
             steps {
-                bat 'mvn clean package'
+                dir('jenkinsdemo') {   // Navigate into jenkinsdemo directory
+                    bat 'mvn clean package'
+                }
             }
         }
 
         stage('Test') {
             steps {
-                bat 'mvn test'
+                dir('jenkinsdemo') {   // Navigate into jenkinsdemo directory
+                    bat 'mvn test'
+                }
             }
         }
 
