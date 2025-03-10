@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "pavanprem/myapp:latest"
+        CONTAINER_NAME = "myapp-container"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/PavanKalyan96Dev/SpringBootJenkins.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh "cd ${env.WORKSPACE} && docker build -t $IMAGE_NAME ."
+                }
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                script {
+                    sh "docker stop $CONTAINER_NAME || true"
+                    sh "docker rm $CONTAINER_NAME || true"
+                    sh "docker run -d --name $CONTAINER_NAME -p 8080:8080 $IMAGE_NAME"
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
+                    sh "docker push $IMAGE_NAME"
+                }
+            }
+        }
+
+        stage('Clean Up') {
+            steps {
+                script {
+                    sh "docker stop $CONTAINER_NAME || true"
+                    sh "docker rm $CONTAINER_NAME || true"
+                    sh "docker image prune -f"
+                }
+            }
+        }
+    }
+}
